@@ -39,10 +39,10 @@ chmod +x activate_adbms
 
 - Will show choises list.
 - If you want to show this list again just press "enter"
-
+```bash
 1) create database	3) drop database	5) connect to database
 2) show databases	4) Rename database	6) Exit From ADBMs
-
+```
 - first will apper to you list of actions that can choose one of thim 
 
 
@@ -57,7 +57,7 @@ dbname
 
 2) show databases 
 
->> output 
+
 ```bash
 ------------------Databases---------------------------
 dbname db1 db2
