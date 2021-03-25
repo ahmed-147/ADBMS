@@ -1,0 +1,203 @@
+#!/bin/bash 
+dbpath=$1
+
+echo "------------------------------------------------------";
+echo "Enter database name that you need use" 
+read dbused
+if ! test -d $dbpath/$dbused
+then
+	echo "$dbused not exists"
+else
+	cd $dbpath/$dbused
+	
+	options=("create table" "show tables" "drop table" "insert row" "select all" "delete row" "exit");
+	echo "------------------- $dbused DataBase -------------------------";
+	select opt in "${options[@]}"
+	do
+		case "$REPLY" in
+
+		1)	echo "------------------------------------------------------";
+			echo "Note: column ids will created automatically ";
+			echo "Enter the name of the table that you want to create";
+			
+			read t_name
+			touch $t_name.csv
+			touch $t_name"_metedata".csv
+			chmod 777 $t_name.csv
+			chmod 777 $t_name"_metedata".csv
+                       	breakval=true
+			while $breakval
+                        do
+			  echo "-----------------------"; 
+			  echo "Enter your column Name"
+			  echo "Enter '0' to exit ";
+			  echo "-----------------------"; 
+                          read colname  
+			  if [ $colname -eq 0 ]; then
+			      	breakval=false
+				continue;
+				echo "------------------------------------------------------";
+			  else 
+				echo "-----------------------"; 
+ 				echo 'Please enter your choice of types:'
+				typeoptions=("number" "string")
+				select opt in "${typeoptions[@]}"
+				do
+				    case "$REPLY" in
+					1)
+                        echo  "$colname,int" >> $t_name"_metedata".csv
+					    break;;
+					2)
+					    echo  "$colname,string" >> $t_name"_metedata".csv
+                         
+					    break;;
+					
+					*) echo "invalid option $REPLY";
+						;;
+				    esac
+				done
+			  fi
+			done
+			echo "----created----"        
+		     	;;
+		    2) 	echo "------------------------------------------------------";
+			echo `ls $dbpath/$dbused | grep -v "_metedata.csv$"`;
+			echo "------------------------------------------------------";
+			;; 
+
+            3)  echo "------------------------------------------------------";
+			echo "Enter the name of the table that you want to drop it "
+			read t_name
+			if ! test -f $t_name.csv
+			then
+			   echo "$t_name not exists";
+			   echo "------------------------------------------------------";
+			else
+			   rm  $t_name".csv"
+			   rm  $t_name"_metedata.csv"
+			   echo "-----$t_name drpoed-----";
+			fi
+		      	;;
+		    4)	
+			echo "------------------------------------------------------";
+			echo "Note: id will inserted automatically ";
+			echo "Enter the name of the table that you want to inserted in";
+			read t_name
+			if ! test -f $t_name.csv ; then
+			   echo "$t_name not exists";
+			   echo "------------------------------------------------------";
+			else
+			   IFS=''
+			   recoredsfile=$t_name"_metedata.csv"
+			   columnsName=`awk 'BEGIN{FS=","; OFS="|";ORS=";"} {print $1,$2 }' $dbpath/$dbused/$recoredsfile`
+			   IFS=';'
+			   read -a colnames <<<"$columnsName"   
+			   newrow=""
+			   checktype=true 
+		           frist=true;
+			   cd ../..
+			   for c in ${colnames[@]}
+				do
+				    
+				    IFS='|' 
+				    read -a strarr <<<"$c" ;
+				    echo "-----------------------"; 
+                                    echo "Enter ${strarr[0]}"
+				    read ans 
+				    target=`. ./checktype $ans`
+				    if [ "$target" = "string" ]; then
+					
+					if  [[ ${strarr[1]} == *"string"* ]] ; then 
+						if "$frist";then
+                            newrow=$ans;
+						else
+							newrow=$newrow","$ans;
+						fi
+					
+					else 
+						checktype=false;	
+					fi
+				   elif [ "$target" = "num" ];then
+
+					if  [[ ${strarr[1]} == *"int"* ]] ; then 
+						if "$frist"; then
+		                                	newrow=$ans;
+						else
+							newrow=$newrow","$ans;	
+						fi
+                         		else 
+						checktype=false;
+					fi 
+				   else 
+					echo "You entered not matched values type !!"
+					checktype=false;
+					break;	
+				   fi
+				     frist=false;
+				done
+				cd $dbpath/$dbused
+                        	if "$checktype"; then 
+					filex=$t_name".csv"
+					hasrecords=`awk '{print NR;}' $filex`
+					if [[ $hasrecords == 0 ]];then
+						echo "1,$newrow" >>  $filex
+					else
+						lastid=`awk -F',' 'BEGIN{lastnum=0;}{if(lastnum<$1){lastnum=$1}} END{print lastnum;}' $filex`
+						echo "$(($lastid + 1)),$newrow" >>  $filex
+					fi
+					echo "-----Inserted-----";
+				else 
+					echo "------------------------------------------------------";
+					echo "there is errors in inserted valus";
+					echo "------------------------------------------------------";
+				fi
+			fi
+		      	;;
+
+		    5)  echo "-------------------------------------------------";
+			echo "Enter the name of the table that you want to selected all";
+			read t_name ;
+			if ! test -f $t_name.csv; then
+			   	echo "$t_name not exists";
+				echo "------------------------------------------------------";
+			else
+				echo "----------------------------------------------";
+				t_name_mete=$t_name"_metedata.csv";
+				awk -F',' 'BEGIN{ORS="\t|";print "ID";} {print $1,"\t" }' $t_name_mete;
+				echo -e "";
+				echo "----------------------------------------------";
+                        	t_name_=$t_name.csv;
+				sed "s/,/\t|/g" $t_name_ ;
+				echo "----------------------------------------------";
+			fi
+		     	;;
+
+		    6)  echo "----------------------------------------------";
+			echo `ls $dbpath/$dbused | grep -v "_metedata.csv$"`
+			echo "----------------------------------------------";
+			echo "Enter the table name that you want to delete from"
+			read t_name
+			if ! test -f $t_name.csv;
+			then
+			   	echo "$t_name not exists";
+				echo "------------------------------------------------------";
+			else
+				echo "-----------------------";
+				echo "Enter the id of the row";
+				read idnum
+				t_name_=$t_name.csv
+				echo -e "`sed "/^$idnum,/d" $t_name_`"  > $t_name_
+				echo -e "----deleted----"
+			fi
+		     	;;
+
+			
+		    7)  
+			echo "Your exited from this DataBase";
+			break
+			;;
+		    *) echo "Invalid option. Try another one.";continue;;
+		    esac
+		done
+	fi
+

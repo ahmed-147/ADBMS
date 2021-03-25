@@ -1,0 +1,70 @@
+#!/bin/bash
+dbpath=`pwd`/DBMs_DataBases
+
+if ! test -d $dbpath
+then
+   mkdir $dbpath
+fi
+echo "---------------------- ADBMs ----------------------------";
+options=("create database" "show databases" "drop database" "Rename database" "connect to database" "Exit From ADBMs")
+select opt in "${options[@]}"
+do
+    case "$REPLY" in
+
+    1)
+	echo "---------------- Create DataBase ---------------------";
+        echo "Enter the name of the database that you want to create."
+	read mydatebasename
+        mkdir $dbpath/$mydatebasename
+	echo "---- $mydatebasename created ------" 
+     	;;
+    2) 
+	echo "------------------Databases---------------------------";
+	ls $dbpath ;
+	echo "------------------------------------------------------";
+	;;
+    3)
+	echo "------------------Drop DataBase-----------------------";
+	echo "Enter the name of the DataBase that you want to drop it."
+	read dbname
+	if ! test -d $dbpath/$dbname
+	then
+	   	echo "$dbname not exists";
+		echo "------------------------------------------------------";
+	else
+		rm -rf $dbpath/$dbname
+		echo "-----droped-----";
+
+	fi
+         ;;
+    4)
+	echo "-----------------Rename DataBase----------------------";
+	echo "Enter the old name of the DataBase that you want to rename it."
+        read old_name
+	if ! test -d $dbpath/$old_name
+	then
+	   	echo "$old_name not exists";
+		echo "------------------------------------------------------";
+	else
+		echo "Enter new name"
+        	read new_name
+        	mv $dbpath/$old_name  $dbpath/$new_name
+	fi
+     	;;
+
+    5)
+	. ./connectdb $dbpath
+	;;
+    6) 	
+	echo "Goodbye!";
+	echo "------------------------------------------------------"; 
+	break;;
+
+    *) 	
+	echo "------------------------------------------------------";
+	echo "Invalid option. Try another one.";
+	echo "------------------------------------------------------";
+	continue;;
+    esac
+done
+

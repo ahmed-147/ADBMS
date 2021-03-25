@@ -1,0 +1,26 @@
+#!/bin/bash
+
+a=$1
+length=${#a}
+
+number="`grep -Eo [0-9] <<< $a`"
+let numberLength=(${#number}+1)/2;
+
+max="`grep -Eo [a-Z] <<< $a`"
+let maxLength=(${#max}+1)/2;
+
+
+if test $length -eq 0
+then
+        echo 'NOTHING'
+elif  test $numberLength -eq $length
+then
+        echo 'num'
+elif test $maxLength -eq $length
+then
+        echo 'string'
+else
+        echo 'mixed'
+fi
+
+
